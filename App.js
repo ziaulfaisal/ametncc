@@ -104,7 +104,7 @@ function LoginScreen({ onLogin }) {
             <Image source={{ uri: NCC_LOGO }}  style={s.loginLogoBig} resizeMode="contain" />
           </View>
           <Text style={s.loginTitle}>NCC Student Portal</Text>
-          <Text style={s.loginSub}>AMET University &amp; AMET IST</Text>
+          <Text style={s.loginSub}>AMET University &amp; AMET IST1</Text>
         </View>
 
         {/* Card */}
