@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "NCC Student Portal",
+    "slug": "snack-443d33c0-81c0-4671-84c4-16943b24ccc3",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1a73e8"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1a73e8"
+      },
+      "package": "com.ziaulfaisal.ametncc"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "03bbb925-12cd-484c-bbd6-876e6959b806"
+      }
+    },
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "url": "https://u.expo.dev/03bbb925-12cd-484c-bbd6-876e6959b806",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD"
+    }
+  }
+}
