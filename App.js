@@ -8,7 +8,7 @@ import * as Updates from 'expo-updates';
 
 const BASE_URL = 'https://ametncc.pythonanywhere.com';
 const AMET_LOGO = 'https://ametncc.pythonanywhere.com/uploads/photos/amet-logo-9.png';
-const NCC_LOGO  = 'https://ametncc.pythonanywhere.com/uploads/photos/ncclogo.pngH';
+const NCC_LOGO  = 'https://ametncc.pythonanywhere.com/uploads/photos/ncclogo.png';
 
 // ── HELPER: build full image URL ──────────────────────────
 function getImageUrl(path, subfolder = 'photos') {
@@ -20,120 +20,51 @@ function getImageUrl(path, subfolder = 'photos') {
 function pad(n) { return String(n).padStart(2, '0'); }
 
 // ── AUTO UPDATE — shows banner, user taps to apply ────────
-async function checkForUpdate(setUpdateAvailable, setUpdateLoading) {
+async function checkForUpdates(setUpdateReady) {
   try {
-    if (__DEV__) {
-      console.log('Development mode - skipping update check');
-      return;
-    }
-    setUpdateLoading(true);
+    if (__DEV__) return;
     const update = await Updates.checkForUpdateAsync();
     if (update.isAvailable) {
-      setUpdateAvailable(true);
-    } else {
-      setUpdateAvailable(false);
+      await Updates.fetchUpdateAsync();
+      setUpdateReady(true);
     }
   } catch (e) {
-    console.log('Update check error:', e);
-    setUpdateAvailable(false);
-  } finally {
-    setUpdateLoading(false);
-  }
-}
-
-async function downloadAndApplyUpdate(setUpdateLoading, setUpdateAvailable) {
-  try {
-    setUpdateLoading(true);
-    const update = await Updates.fetchUpdateAsync();
-    if (update.isNew) {
-      Alert.alert(
-        'Update Downloaded',
-        'The app will now restart to apply the update.',
-        [
-          {
-            text: 'OK',
-            onPress: async () => {
-              await Updates.reloadAsync();
-            }
-          }
-        ]
-      );
-    }
-  } catch (e) {
-    console.log('Update download error:', e);
-    Alert.alert('Update Failed', 'Could not download update. Please check your internet connection and try again.');
-    setUpdateAvailable(false);
-  } finally {
-    setUpdateLoading(false);
+    console.log('Update check:', e);
   }
 }
 
 // ── UPDATE BANNER ─────────────────────────────────────────
-function UpdateBanner({ visible, onUpdate, updateLoading }) {
+function UpdateBanner({ visible }) {
   if (!visible) return null;
   return (
-    <View style={s.updateBannerContainer}>
-      <TouchableOpacity
-        style={s.updateBanner}
-        onPress={onUpdate}
-        activeOpacity={0.85}
-        disabled={updateLoading}
-      >
-        <View style={s.updateBannerLeft}>
-          <Text style={{ fontSize: 24 }}>🔄</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={s.updateBannerTitle}>New Update Available!</Text>
-            <Text style={s.updateBannerSub}>
-              {updateLoading ? 'Downloading update...' : 'Tap here to update the app now'}
-            </Text>
-          </View>
+    <TouchableOpacity
+      style={s.updateBanner}
+      onPress={async () => {
+        try { await Updates.reloadAsync(); } catch (e) {}
+      }}
+      activeOpacity={0.85}
+    >
+      <View style={s.updateBannerLeft}>
+        <Text style={{ fontSize: 20 }}>🔄</Text>
+        <View>
+          <Text style={s.updateBannerTitle}>New Update Available!</Text>
+          <Text style={s.updateBannerSub}>Tap here to update the app now</Text>
         </View>
-        {!updateLoading && (
-          <View style={s.updateBannerBtn}>
-            <Text style={s.updateBannerBtnText}>Update Now →</Text>
-          </View>
-        )}
-        {updateLoading && (
-          <ActivityIndicator size="small" color="#fff" />
-        )}
-      </TouchableOpacity>
-    </View>
+      </View>
+      <Text style={s.updateBannerBtn}>Update →</Text>
+    </TouchableOpacity>
   );
 }
 
 // ── LOGIN SCREEN (CENTERED) ───────────────────────────────
 function LoginScreen({ onLogin }) {
-  const [reg,           setReg]           = useState('');
-  const [day,           setDay]           = useState('');
-  const [month,         setMonth]         = useState('');
-  const [year,          setYear]          = useState('');
-  const [loading,       setLoading]       = useState(false);
-  const [updateAvailable, setUpdateAvailable] = useState(false);
-  const [updateLoading, setUpdateLoading] = useState(false);
-
-  // Check for updates when login screen mounts
-  useEffect(() => {
-    checkForUpdate(setUpdateAvailable, setUpdateLoading);
-  }, []);
-
-  const handleUpdate = async () => {
-    await downloadAndApplyUpdate(setUpdateLoading, setUpdateAvailable);
-  };
+  const [reg,     setReg]     = useState('');
+  const [day,     setDay]     = useState('');
+  const [month,   setMonth]   = useState('');
+  const [year,    setYear]    = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    // Block login if update is available
-    if (updateAvailable) {
-      Alert.alert(
-        'Update Required',
-        'Please update the app before logging in.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Update Now', onPress: handleUpdate }
-        ]
-      );
-      return;
-    }
-
     if (!reg.trim()) { Alert.alert('Error', 'Enter regimental number'); return; }
     if (!day || !month || !year || year.length < 4) {
       Alert.alert('Error', 'Enter your complete date of birth (DD MM YYYY)');
@@ -162,14 +93,6 @@ function LoginScreen({ onLogin }) {
   return (
     <SafeAreaView style={s.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      
-      {/* Update banner at top of login screen */}
-      <UpdateBanner 
-        visible={updateAvailable} 
-        onUpdate={handleUpdate}
-        updateLoading={updateLoading}
-      />
-      
       <View style={s.loginContainer}>
         <ScrollView contentContainerStyle={s.loginScroll} showsVerticalScrollIndicator={false}>
           {/* Title with logos */}
@@ -195,7 +118,6 @@ function LoginScreen({ onLogin }) {
                 placeholder="e.g. TN-NCC-001"
                 placeholderTextColor="#aaa"
                 autoCapitalize="characters"
-                editable={!updateAvailable}
               />
             </View>
 
@@ -208,43 +130,25 @@ function LoginScreen({ onLogin }) {
                 style={s.dobInput}
                 value={day} onChangeText={setDay}
                 placeholder="DD" placeholderTextColor="#aaa"
-                keyboardType="numeric" maxLength={2}
-                editable={!updateAvailable}
-              />
+                keyboardType="numeric" maxLength={2} />
               <TextInput
                 style={s.dobInput}
                 value={month} onChangeText={setMonth}
                 placeholder="MM" placeholderTextColor="#aaa"
-                keyboardType="numeric" maxLength={2}
-                editable={!updateAvailable}
-              />
+                keyboardType="numeric" maxLength={2} />
               <TextInput
                 style={[s.dobInput, { flex: 2 }]}
                 value={year} onChangeText={setYear}
                 placeholder="YYYY" placeholderTextColor="#aaa"
-                keyboardType="numeric" maxLength={4}
-                editable={!updateAvailable}
-              />
+                keyboardType="numeric" maxLength={4} />
             </View>
 
-            <TouchableOpacity 
-              style={[s.loginBtn, updateAvailable && s.loginBtnDisabled]} 
-              onPress={handleLogin} 
-              disabled={loading || updateAvailable}
-            >
+            <TouchableOpacity style={s.loginBtn} onPress={handleLogin} disabled={loading}>
               {loading
                 ? <ActivityIndicator color="#fff" />
                 : <><Text style={s.loginBtnText}>Login to Portal</Text><Text style={s.loginBtnArrow}> →</Text></>
               }
             </TouchableOpacity>
-
-            {updateAvailable && (
-              <View style={s.updateRequiredBox}>
-                <Text style={s.updateRequiredText}>
-                  ⚠️ Update required before login. Please tap the banner above to update.
-                </Text>
-              </View>
-            )}
 
             <View style={s.infoBox}>
               <Text style={s.infoText}>ℹ️  Enter your date of birth as DD / MM / YYYY</Text>
@@ -833,6 +737,11 @@ export default function App() {
   const [refreshing,  setRefreshing]  = useState(false);
   const [updateReady, setUpdateReady] = useState(false);
 
+  // Check for OTA update when app opens
+  useEffect(() => {
+    checkForUpdates(setUpdateReady);
+  }, []);
+
   // Android back button handler
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -914,6 +823,9 @@ export default function App() {
     <View style={{ flex: 1, backgroundColor: '#f5f7fa' }}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 
+      {/* Update notification banner */}
+      <UpdateBanner visible={updateReady} />
+
       <TopNavBar
         regNo={student.regimental_number}
         onLogout={handleLogout}
@@ -953,24 +865,16 @@ const s = StyleSheet.create({
   dobRow:              { flexDirection: 'row', gap: 8, marginBottom: 10 },
   dobInput:            { flex: 1, borderWidth: 2, borderColor: '#e1e5eb', borderRadius: 8, padding: 10, fontSize: 14, color: '#333', backgroundColor: '#fafafa' },
   loginBtn:            { backgroundColor: '#1a73e8', borderRadius: 10, padding: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  loginBtnDisabled:    { backgroundColor: '#ccc' },
   loginBtnText:        { color: '#fff', fontSize: 16, fontWeight: '700' },
   loginBtnArrow:       { color: '#fff', fontSize: 18, fontWeight: '700' },
   infoBox:             { backgroundColor: '#e8f0fe', borderRadius: 8, padding: 10, marginTop: 14 },
   infoText:            { color: '#1a73e8', fontSize: 12, textAlign: 'center' },
   loginFooter:         { textAlign: 'center', color: '#aaa', fontSize: 11, marginTop: 20 },
-  
-  updateBannerContainer: { backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e1e5eb' },
-  updateBanner:        { backgroundColor: '#1a73e8', paddingVertical: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  updateBannerLeft:    { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  updateBannerTitle:   { color: '#fff', fontWeight: '700', fontSize: 14 },
-  updateBannerSub:     { color: 'rgba(255,255,255,0.85)', fontSize: 11, marginTop: 2 },
-  updateBannerBtn:     { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 16, paddingVertical: 6, borderRadius: 20, marginLeft: 10 },
-  updateBannerBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
-  
-  updateRequiredBox:   { backgroundColor: '#fce8e6', borderRadius: 8, padding: 10, marginTop: 14, borderLeftWidth: 3, borderLeftColor: '#ea4335' },
-  updateRequiredText:  { color: '#ea4335', fontSize: 12, textAlign: 'center', fontWeight: '500' },
-  
+  updateBanner:        { backgroundColor: '#1a73e8', paddingVertical: 10, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  updateBannerLeft:    { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  updateBannerTitle:   { color: '#fff', fontWeight: '700', fontSize: 13 },
+  updateBannerSub:     { color: 'rgba(255,255,255,0.8)', fontSize: 11 },
+  updateBannerBtn:     { color: '#fff', fontWeight: '700', fontSize: 14, backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
   topNav:              { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 8, paddingTop: 36, borderBottomWidth: 0.5, borderBottomColor: '#e1e5eb', gap: 8 },
   navLogo:             { width: 70, height: 28 },
   navLogoDivider:      { width: 1, height: 24, backgroundColor: '#e1e5eb' },
