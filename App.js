@@ -102,7 +102,7 @@ function LoginScreen({ onLogin }) {
               <View style={s.loginLogoDividerBig} />
               <Image source={{ uri: NCC_LOGO }}  style={s.loginLogoBig} resizeMode="contain" />
             </View>
-            <Text style={s.loginTitle}>AMET NCC Student Portal</Text>
+            <Text style={s.loginTitle}>NCC Student Portal</Text>
             <Text style={s.loginSub}>AMET University &amp; AMET IST</Text>
           </View>
 
@@ -164,7 +164,7 @@ function LoginScreen({ onLogin }) {
   );
 }
 
-// ── TOP NAV BAR (with Refresh and Exit buttons) ───────────
+// ── TOP NAV BAR (with Refresh button) ─────────────────────
 function TopNavBar({ regNo, onLogout, onRefresh, refreshing }) {
   return (
     <View style={s.topNav}>
@@ -176,7 +176,7 @@ function TopNavBar({ regNo, onLogout, onRefresh, refreshing }) {
         <Text style={s.navUserText} numberOfLines={1}>{regNo}</Text>
       </View>
       <TouchableOpacity onPress={onRefresh} style={s.refreshBtn} disabled={refreshing}>
-        <Text style={s.refreshBtnText}>{refreshing ? '⟳' : '↻'}</Text>
+        <Text style={s.refreshBtnText}>{refreshing ? '⟳' : '🛡️'}</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={onLogout} style={s.logoutBtn}>
         <Text style={s.logoutBtnText}>Exit</Text>
@@ -185,8 +185,48 @@ function TopNavBar({ regNo, onLogout, onRefresh, refreshing }) {
   );
 }
 
-// ── DASHBOARD ─────────────────────────────────────────────
-function Dashboard({ student, data, onNavigate }) {
+// ── BOTTOM TAB BAR (6 tabs) ───────────────────────────────
+function BottomTabBar({ active, onTab, unread, pendingComp }) {
+  const tabs = [
+    { id: 'dashboard',     icon: '🏠', label: 'Home' },
+    { id: 'profile',       icon: '👤', label: 'Profile' },
+    { id: 'attendance',    icon: '📅', label: 'Attend' },
+    { id: 'notifications', icon: '🔔', label: 'Alerts',  badge: unread },
+    { id: 'complaints',    icon: '💬', label: 'Help',    badge: pendingComp },
+    { id: 'fund',          icon: '💰', label: 'Fund' },
+  ];
+  return (
+    <View style={s.bottomTabBar}>
+      {tabs.map(t => (
+        <TouchableOpacity key={t.id} style={s.tabItem} onPress={() => onTab(t.id)}>
+          <View style={{ position: 'relative' }}>
+            <Text style={[s.tabIcon, active === t.id && s.tabIconActive]}>{t.icon}</Text>
+            {t.badge > 0 && (
+              <View style={s.tabBadge}>
+                <Text style={s.tabBadgeText}>{t.badge > 9 ? '9+' : t.badge}</Text>
+              </View>
+            )}
+          </View>
+          <Text style={[s.tabLabel, active === t.id && s.tabLabelActive]}>{t.label}</Text>
+          {active === t.id && <View style={s.tabActiveBar} />}
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
+
+// ── SECTION HEADER ────────────────────────────────────────
+function SectionHeader({ title, color, rightElement }) {
+  return (
+    <View style={[s.sectionHeader, { backgroundColor: color || '#1a73e8' }]}>
+      <Text style={s.sectionHeaderTitle}>{title}</Text>
+      {rightElement}
+    </View>
+  );
+}
+
+// ── DASHBOARD (with Shield emoji and refresh) ─────────────
+function Dashboard({ student, data, onTab }) {
   const att    = data?.attendance_stats || {};
   const pct    = att.percentage ? att.percentage.toFixed(1) : '0.0';
   const unread = (data?.notifications || []).filter(n => !n.is_read).length;
@@ -200,26 +240,26 @@ function Dashboard({ student, data, onNavigate }) {
           <Text style={s.welcomeName} numberOfLines={1}>{data?.name || student.name}</Text>
           <Text style={s.welcomeSub}>{student.regimental_number} · {data?.wing} Wing</Text>
         </View>
-        <Text style={{ fontSize: 40, opacity: 0.3 }}>🛡️</Text>
+        <Text style={s.welcomeShield}>🛡️</Text>
       </View>
 
       <View style={s.statsGrid}>
-        <TouchableOpacity style={[s.statCard, { backgroundColor: '#1a73e8' }]} onPress={() => onNavigate('attendance')}>
+        <TouchableOpacity style={[s.statCard, { backgroundColor: '#1a73e8' }]} onPress={() => onTab('attendance')}>
           <Text style={s.statBgIcon}>📅</Text>
           <Text style={s.statVal}>{pct}%</Text>
           <Text style={s.statLbl}>Attendance</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[s.statCard, { backgroundColor: '#34a853' }]} onPress={() => onNavigate('fund')}>
+        <TouchableOpacity style={[s.statCard, { backgroundColor: '#34a853' }]} onPress={() => onTab('fund')}>
           <Text style={s.statBgIcon}>💰</Text>
           <Text style={s.statVal}>₹{fund.toFixed(0)}</Text>
           <Text style={s.statLbl}>Fund</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[s.statCard, { backgroundColor: '#fbbc04' }]} onPress={() => onNavigate('notifications')}>
+        <TouchableOpacity style={[s.statCard, { backgroundColor: '#fbbc04' }]} onPress={() => onTab('notifications')}>
           <Text style={s.statBgIcon}>🔔</Text>
           <Text style={s.statVal}>{unread}</Text>
           <Text style={s.statLbl}>Unread</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[s.statCard, { backgroundColor: '#ea4335' }]} onPress={() => onNavigate('complaints')}>
+        <TouchableOpacity style={[s.statCard, { backgroundColor: '#ea4335' }]} onPress={() => onTab('complaints')}>
           <Text style={s.statBgIcon}>💬</Text>
           <Text style={s.statVal}>{(data?.complaints || []).filter(c => c.status === 'pending').length}</Text>
           <Text style={s.statLbl}>Pending</Text>
@@ -246,14 +286,14 @@ function Dashboard({ student, data, onNavigate }) {
         <Text style={s.cardTitle}>⚡ Quick Access</Text>
         <View style={s.quickGrid}>
           {[
-            { icon: '📅', label: 'Attendance', screen: 'attendance', color: '#e8f0fe', tc: '#1a73e8' },
-            { icon: '👤', label: 'Profile',    screen: 'profile',    color: '#e6f4ea', tc: '#2e7d32' },
-            { icon: '🔔', label: 'Alerts',     screen: 'notifications', color: '#fff8e1', tc: '#f57c00' },
-            { icon: '💬', label: 'Complaints', screen: 'complaints', color: '#fce8e6', tc: '#c62828' },
-            { icon: '💰', label: 'Fund',       screen: 'fund',       color: '#e6f4ea', tc: '#2e7d32' },
-            { icon: '🏅', label: 'Certs',      screen: 'profile',    color: '#f3e5f5', tc: '#6a1b9a' },
+            { icon: '📅', label: 'Attendance', tab: 'attendance',    color: '#e8f0fe', tc: '#1a73e8' },
+            { icon: '👤', label: 'Profile',    tab: 'profile',       color: '#e6f4ea', tc: '#2e7d32' },
+            { icon: '🔔', label: 'Alerts',     tab: 'notifications', color: '#fff8e1', tc: '#f57c00' },
+            { icon: '💬', label: 'Complaints', tab: 'complaints',    color: '#fce8e6', tc: '#c62828' },
+            { icon: '💰', label: 'Fund',       tab: 'fund',          color: '#e6f4ea', tc: '#2e7d32' },
+            { icon: '🏅', label: 'Certs',      tab: 'profile',       color: '#f3e5f5', tc: '#6a1b9a' },
           ].map((item, i) => (
-            <TouchableOpacity key={i} style={[s.quickBtn, { backgroundColor: item.color }]} onPress={() => onNavigate(item.screen)}>
+            <TouchableOpacity key={i} style={[s.quickBtn, { backgroundColor: item.color }]} onPress={() => onTab(item.tab)}>
               <Text style={{ fontSize: 24 }}>{item.icon}</Text>
               <Text style={[s.quickBtnText, { color: item.tc }]}>{item.label}</Text>
             </TouchableOpacity>
@@ -275,7 +315,7 @@ function Dashboard({ student, data, onNavigate }) {
             <Text style={s.infoVal}>{v || '—'}</Text>
           </View>
         ))}
-        <TouchableOpacity style={s.viewMoreBtn} onPress={() => onNavigate('profile')}>
+        <TouchableOpacity style={s.viewMoreBtn} onPress={() => onTab('profile')}>
           <Text style={s.viewMoreText}>View Full Profile →</Text>
         </TouchableOpacity>
       </View>
@@ -447,9 +487,7 @@ function Attendance({ data }) {
 
   return (
     <ScrollView style={s.screen}>
-      <View style={s.sectionHeaderSimple}>
-        <Text style={s.sectionHeaderTitleSimple}>📅 My Attendance</Text>
-      </View>
+      <SectionHeader title="📅 My Attendance" />
       <View style={s.statsGrid}>
         {[
           { label: 'Total',   val: att.total_days   || 0, color: '#1a73e8' },
@@ -511,14 +549,16 @@ function Notifications({ studentId, notifications, onMarkRead }) {
   const unread = notifications.filter(n => !n.is_read).length;
   return (
     <ScrollView style={s.screen}>
-      <View style={[s.sectionHeaderSimple, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
-        <Text style={s.sectionHeaderTitleSimple}>🔔 Notifications</Text>
-        {unread > 0 && (
-          <TouchableOpacity onPress={() => onMarkRead('all')} style={s.markAllBtnSimple}>
-            <Text style={s.markAllTextSimple}>✓ Mark all read</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      <SectionHeader
+        title="🔔 Notifications"
+        rightElement={
+          unread > 0
+            ? <TouchableOpacity onPress={() => onMarkRead('all')} style={s.markAllBtn}>
+                <Text style={s.markAllText}>✓ Mark all read</Text>
+              </TouchableOpacity>
+            : null
+        }
+      />
       {notifications.length === 0
         ? <View style={s.empty}><Text style={{ fontSize: 40 }}>🔕</Text><Text style={s.emptyText}>No notifications yet</Text></View>
         : notifications.map(n => (
@@ -579,12 +619,15 @@ function Complaints({ studentId, complaints, onRefresh }) {
 
   return (
     <ScrollView style={s.screen}>
-      <View style={[s.sectionHeaderSimple, { backgroundColor: '#ea4335', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
-        <Text style={[s.sectionHeaderTitleSimple, { color: '#fff' }]}>💬 Complaints</Text>
-        <TouchableOpacity onPress={() => setShowForm(!showForm)} style={s.newBtnSimple}>
-          <Text style={s.newBtnTextSimple}>{showForm ? '✕ Cancel' : '+ New'}</Text>
-        </TouchableOpacity>
-      </View>
+      <SectionHeader
+        title="💬 Complaints"
+        color="#ea4335"
+        rightElement={
+          <TouchableOpacity onPress={() => setShowForm(!showForm)} style={s.newBtn}>
+            <Text style={s.newBtnText}>{showForm ? '✕ Cancel' : '+ New'}</Text>
+          </TouchableOpacity>
+        }
+      />
 
       {showForm && (
         <View style={s.card}>
@@ -651,9 +694,7 @@ function Fund({ data }) {
 
   return (
     <ScrollView style={s.screen}>
-      <View style={[s.sectionHeaderSimple, { backgroundColor: '#34a853' }]}>
-        <Text style={[s.sectionHeaderTitleSimple, { color: '#fff' }]}>💰 Fund Details</Text>
-      </View>
+      <SectionHeader title="💰 Fund Details" color="#34a853" />
       <View style={s.statsGrid}>
         {[
           { label: 'Total Received', val: `₹${total.toFixed(0)}`, color: '#34a853' },
@@ -691,7 +732,7 @@ function Fund({ data }) {
 export default function App() {
   const [student,     setStudent]     = useState(null);
   const [dashData,    setDashData]    = useState(null);
-  const [currentScreen, setCurrentScreen] = useState('dashboard');
+  const [tab,         setTab]         = useState('dashboard');
   const [loading,     setLoading]     = useState(false);
   const [refreshing,  setRefreshing]  = useState(false);
   const [updateReady, setUpdateReady] = useState(false);
@@ -704,8 +745,8 @@ export default function App() {
   // Android back button handler
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (currentScreen !== 'dashboard') {
-        setCurrentScreen('dashboard');
+      if (tab !== 'dashboard') {
+        setTab('dashboard');
         return true;
       }
       Alert.alert('Exit', 'Do you want to exit the app?', [
@@ -715,7 +756,7 @@ export default function App() {
       return true;
     });
     return () => backHandler.remove();
-  }, [currentScreen]);
+  }, [tab]);
 
   const handleLogin = async (studentData) => {
     setStudent(studentData);
@@ -761,7 +802,7 @@ export default function App() {
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', style: 'destructive', onPress: () => { setStudent(null); setDashData(null); setCurrentScreen('dashboard'); } },
+      { text: 'Logout', style: 'destructive', onPress: () => { setStudent(null); setDashData(null); setTab('dashboard'); } },
     ]);
   };
 
@@ -792,30 +833,14 @@ export default function App() {
         refreshing={refreshing}
       />
 
-      {currentScreen === 'dashboard' && (
-        <Dashboard
-          student={student}
-          data={dashData}
-          onNavigate={setCurrentScreen}
-        />
-      )}
-      {currentScreen === 'profile' && <Profile data={dashData} />}
-      {currentScreen === 'attendance' && <Attendance data={dashData} />}
-      {currentScreen === 'notifications' && (
-        <Notifications
-          studentId={student.student_id}
-          notifications={dashData?.notifications || []}
-          onMarkRead={markRead}
-        />
-      )}
-      {currentScreen === 'complaints' && (
-        <Complaints
-          studentId={student.student_id}
-          complaints={dashData?.complaints || []}
-          onRefresh={refreshData}
-        />
-      )}
-      {currentScreen === 'fund' && <Fund data={dashData} />}
+      {tab === 'dashboard'     && <Dashboard    student={student} data={dashData} onTab={setTab} />}
+      {tab === 'profile'       && <Profile      data={dashData} />}
+      {tab === 'attendance'    && <Attendance   data={dashData} />}
+      {tab === 'notifications' && <Notifications studentId={student.student_id} notifications={dashData?.notifications || []} onMarkRead={markRead} />}
+      {tab === 'complaints'    && <Complaints   studentId={student.student_id} complaints={dashData?.complaints || []} onRefresh={refreshData} />}
+      {tab === 'fund'          && <Fund         data={dashData} />}
+
+      <BottomTabBar active={tab} onTab={setTab} unread={unread} pendingComp={pendingComp} />
     </View>
   );
 }
@@ -859,13 +884,23 @@ const s = StyleSheet.create({
   refreshBtnText:      { color: '#1a73e8', fontSize: 18, fontWeight: '600' },
   logoutBtn:           { backgroundColor: '#fce8e6', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
   logoutBtnText:       { color: '#ea4335', fontSize: 12, fontWeight: '700' },
-  sectionHeaderSimple: { padding: 16, paddingTop: 14, paddingBottom: 14, backgroundColor: '#1a73e8' },
-  sectionHeaderTitleSimple: { color: '#fff', fontSize: 18, fontWeight: '700' },
+  bottomTabBar:        { flexDirection: 'row', backgroundColor: '#fff', borderTopWidth: 0.5, borderTopColor: '#e1e5eb', paddingBottom: 4, paddingTop: 4 },
+  tabItem:             { flex: 1, alignItems: 'center', paddingTop: 6, position: 'relative' },
+  tabIcon:             { fontSize: 20, color: '#999' },
+  tabIconActive:       { color: '#1a73e8' },
+  tabLabel:            { fontSize: 10, color: '#999', marginTop: 2 },
+  tabLabelActive:      { color: '#1a73e8', fontWeight: '600' },
+  tabActiveBar:        { position: 'absolute', top: 0, left: '20%', right: '20%', height: 2, backgroundColor: '#1a73e8', borderRadius: 1 },
+  tabBadge:            { position: 'absolute', top: -4, right: -8, backgroundColor: '#ea4335', borderRadius: 9, minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 2 },
+  tabBadgeText:        { color: '#fff', fontSize: 9, fontWeight: '700' },
+  sectionHeader:       { padding: 16, paddingTop: 14, paddingBottom: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  sectionHeaderTitle:  { color: '#fff', fontSize: 18, fontWeight: '700' },
   screen:              { flex: 1, backgroundColor: '#f5f7fa' },
   welcomeBanner:       { backgroundColor: '#1a73e8', padding: 20, flexDirection: 'row', alignItems: 'center' },
   welcomeGreeting:     { color: 'rgba(255,255,255,0.8)', fontSize: 13 },
   welcomeName:         { color: '#fff', fontSize: 20, fontWeight: '700', marginTop: 2 },
   welcomeSub:          { color: 'rgba(255,255,255,0.8)', fontSize: 12, marginTop: 2 },
+  welcomeShield:       { fontSize: 40, opacity: 0.3 },
   statsGrid:           { flexDirection: 'row', flexWrap: 'wrap', gap: 10, padding: 12, paddingBottom: 0 },
   statCard:            { flex: 1, minWidth: '45%', borderRadius: 10, padding: 14, minHeight: 85, position: 'relative', overflow: 'hidden' },
   statBgIcon:          { position: 'absolute', right: 8, top: 8, fontSize: 32, opacity: 0.2 },
@@ -911,10 +946,10 @@ const s = StyleSheet.create({
   notifMsg:            { fontSize: 12, color: '#666', marginTop: 2, lineHeight: 16 },
   notifTime:           { fontSize: 10, color: '#999', marginTop: 3 },
   dot:                 { width: 8, height: 8, borderRadius: 4, backgroundColor: '#ea4335' },
-  markAllBtnSimple:    { backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5 },
-  markAllTextSimple:   { color: '#1a73e8', fontSize: 12, fontWeight: '600' },
-  newBtnSimple:        { backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6 },
-  newBtnTextSimple:    { color: '#ea4335', fontSize: 13, fontWeight: '700' },
+  markAllBtn:          { backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5 },
+  markAllText:         { color: '#1a73e8', fontSize: 12, fontWeight: '600' },
+  newBtn:              { backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6 },
+  newBtnText:          { color: '#ea4335', fontSize: 13, fontWeight: '700' },
   typeChip:            { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: '#e1e5eb', marginRight: 8, backgroundColor: '#fff' },
   typeChipSel:         { backgroundColor: '#1a73e8', borderColor: '#1a73e8' },
   typeChipText:        { fontSize: 12, fontWeight: '600', color: '#666' },
