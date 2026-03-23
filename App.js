@@ -20,7 +20,7 @@ const NEW_APP_CONFIG = {
   // Short description of what's new
   description: 'New features, faster & better experience!',
   // Android Play Store or direct APK download link for the new app
-  androidUrl: 'https://play.google.com/store/apps/details?id=com.ziaulfaisal.ametncc2',
+  androidUrl: 'https://ametncc.pythonanywhere.com/uploads/ametncc-latest.apk',
   // iOS App Store link (optional)
   iosUrl: 'https://apps.apple.com/app/amet-ncc-portal-v2/id0000000000',
   // API endpoint that returns { migrationRequired: true/false, message: "..." }
