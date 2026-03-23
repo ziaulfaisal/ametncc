@@ -11,29 +11,13 @@ jobs:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-
       - name: Install dependencies
         run: npm install
-
-      - name: Publish OTA update
+      - name: Publish update
         run: npx eas-cli update --branch production --message "Auto update from GitHub" --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EAS_NO_VCS: 1
-
-      - name: Build APK
-        run: npx eas-cli build --platform android --profile preview --non-interactive --output ./ametncc-latest.apk
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          EAS_NO_VCS: 1
-
-      - name: Upload APK to PythonAnywhere
-        run: |
-          curl -X POST \
-            -H "Authorization: Token ${{ secrets.PYTHONANYWHERE_API_TOKEN }}" \
-            -F "content=@./ametncc-latest.apk" \
-            "https://www.pythonanywhere.com/api/v0/user/ziaulfaisal/files/path/home/ziaulfaisal/uploads/ametncc-latest.apk"
