@@ -1,19 +1,19 @@
 {
   "expo": {
-    "name": "NCC Student Portal",
+    "name": "AMET NCC PORTAL",
     "slug": "snack-443d33c0-81c0-4671-84c4-16943b24ccc3",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "https://ametncc.pythonanywhere.com/uploads/photos/ametnccapplogo.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "https://ametncc.pythonanywhere.com/uploads/photos/ametnccapplogo.png",
       "resizeMode": "contain",
       "backgroundColor": "#1a73e8"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "https://ametncc.pythonanywhere.com/uploads/photos/ametnccapplogo.png",
         "backgroundColor": "#1a73e8"
       },
       "package": "com.ziaulfaisal.ametncc"
