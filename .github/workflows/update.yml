@@ -7,13 +7,17 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
-      - run: npm install
-      - run: npx eas-cli update --branch production --message "Auto update from GitHub" --non-interactive
+          node-version: 20
+      - name: Install dependencies
+        run: npm install
+      - name: Publish update
+        run: npx eas-cli update --branch production --message "Auto update from GitHub" --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EAS_NO_VCS: 1
