@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "AMET NCC PORTAL",
-    "slug": "snack-443d33c0-81c0-4671-84c4-16943b24ccc3",
+    "slug": "ametncc",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "https://ametncc.pythonanywhere.com/uploads/photos/ametnccapplogo.png",
@@ -20,12 +20,12 @@
     },
     "extra": {
       "eas": {
-        "projectId": "03bbb925-12cd-484c-bbd6-876e6959b806"
+        "projectId": "a9a621d4-91e8-438f-a7c1-7f5f6156ab37"
       }
     },
     "runtimeVersion": "1.0.0",
     "updates": {
-      "url": "https://u.expo.dev/03bbb925-12cd-484c-bbd6-876e6959b806",
+      "url": "https://u.expo.dev/a9a621d4-91e8-438f-a7c1-7f5f6156ab37",
       "enabled": true,
       "checkAutomatically": "ON_LOAD"
     }
