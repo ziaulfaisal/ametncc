@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   TextInput, StyleSheet, Alert, ActivityIndicator,
-  SafeAreaView, StatusBar, Image
+  SafeAreaView, StatusBar, Image, BackHandler
 } from 'react-native';
 import * as Updates from 'expo-updates';
 
@@ -56,7 +56,7 @@ function UpdateBanner({ visible }) {
   );
 }
 
-// ── LOGIN SCREEN ──────────────────────────────────────────
+// ── LOGIN SCREEN (CENTERED) ───────────────────────────────
 function LoginScreen({ onLogin }) {
   const [reg,     setReg]     = useState('');
   const [day,     setDay]     = useState('');
@@ -70,11 +70,10 @@ function LoginScreen({ onLogin }) {
       Alert.alert('Error', 'Enter your complete date of birth (DD MM YYYY)');
       return;
     }
-    // Try multiple password formats like the website does
     const d = pad(day);
     const m = pad(month);
     const y = year;
-    const password = `${d}${m}${y}`; // DDMMYYYY format
+    const password = `${d}${m}${y}`;
     setLoading(true);
     try {
       const res  = await fetch(`${BASE_URL}/api/student/login`, {
@@ -94,78 +93,79 @@ function LoginScreen({ onLogin }) {
   return (
     <SafeAreaView style={s.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      <ScrollView contentContainerStyle={s.loginBg}>
-
-        {/* Title with logos */}
-        <View style={s.loginTitleWrap}>
-          <View style={s.loginLogosAbove}>
-            <Image source={{ uri: AMET_LOGO }} style={s.loginLogoBig} resizeMode="contain" />
-            <View style={s.loginLogoDividerBig} />
-            <Image source={{ uri: NCC_LOGO }}  style={s.loginLogoBig} resizeMode="contain" />
-          </View>
-          <Text style={s.loginTitle}>NCC Student Portal</Text>
-          <Text style={s.loginSub}>AMET University &amp; AMET IST</Text>
-        </View>
-
-        {/* Card */}
-        <View style={s.loginCard}>
-          <Text style={s.label}>Regimental Number</Text>
-          <View style={s.inputRow}>
-            <Text style={s.inputIcon}>🪪</Text>
-            <TextInput
-              style={s.inputField}
-              value={reg}
-              onChangeText={setReg}
-              placeholder="e.g. TN-NCC-001"
-              placeholderTextColor="#aaa"
-              autoCapitalize="characters"
-            />
+      <View style={s.loginContainer}>
+        <ScrollView contentContainerStyle={s.loginScroll} showsVerticalScrollIndicator={false}>
+          {/* Title with logos */}
+          <View style={s.loginTitleWrap}>
+            <View style={s.loginLogosAbove}>
+              <Image source={{ uri: AMET_LOGO }} style={s.loginLogoBig} resizeMode="contain" />
+              <View style={s.loginLogoDividerBig} />
+              <Image source={{ uri: NCC_LOGO }}  style={s.loginLogoBig} resizeMode="contain" />
+            </View>
+            <Text style={s.loginTitle}>NCC Student Portal</Text>
+            <Text style={s.loginSub}>AMET University &amp; AMET IST</Text>
           </View>
 
-          <Text style={[s.label, { marginTop: 16 }]}>
-            Date of Birth
-            <Text style={s.labelHint}> (your password)</Text>
+          {/* Card */}
+          <View style={s.loginCard}>
+            <Text style={s.label}>Regimental Number</Text>
+            <View style={s.inputRow}>
+              <Text style={s.inputIcon}>🪪</Text>
+              <TextInput
+                style={s.inputField}
+                value={reg}
+                onChangeText={setReg}
+                placeholder="e.g. TN-NCC-001"
+                placeholderTextColor="#aaa"
+                autoCapitalize="characters"
+              />
+            </View>
+
+            <Text style={[s.label, { marginTop: 16 }]}>
+              Date of Birth
+              <Text style={s.labelHint}> (your password)</Text>
+            </Text>
+            <View style={s.dobRow}>
+              <TextInput
+                style={s.dobInput}
+                value={day} onChangeText={setDay}
+                placeholder="DD" placeholderTextColor="#aaa"
+                keyboardType="numeric" maxLength={2} />
+              <TextInput
+                style={s.dobInput}
+                value={month} onChangeText={setMonth}
+                placeholder="MM" placeholderTextColor="#aaa"
+                keyboardType="numeric" maxLength={2} />
+              <TextInput
+                style={[s.dobInput, { flex: 2 }]}
+                value={year} onChangeText={setYear}
+                placeholder="YYYY" placeholderTextColor="#aaa"
+                keyboardType="numeric" maxLength={4} />
+            </View>
+
+            <TouchableOpacity style={s.loginBtn} onPress={handleLogin} disabled={loading}>
+              {loading
+                ? <ActivityIndicator color="#fff" />
+                : <><Text style={s.loginBtnText}>Login to Portal</Text><Text style={s.loginBtnArrow}> →</Text></>
+              }
+            </TouchableOpacity>
+
+            <View style={s.infoBox}>
+              <Text style={s.infoText}>ℹ️  Enter your date of birth as DD / MM / YYYY</Text>
+            </View>
+          </View>
+
+          <Text style={s.loginFooter}>
+            © {new Date().getFullYear()} AMET NCC Student Management
           </Text>
-          <View style={s.dobRow}>
-            <TextInput
-              style={s.dobInput}
-              value={day} onChangeText={setDay}
-              placeholder="DD" placeholderTextColor="#aaa"
-              keyboardType="numeric" maxLength={2} />
-            <TextInput
-              style={s.dobInput}
-              value={month} onChangeText={setMonth}
-              placeholder="MM" placeholderTextColor="#aaa"
-              keyboardType="numeric" maxLength={2} />
-            <TextInput
-              style={[s.dobInput, { flex: 2 }]}
-              value={year} onChangeText={setYear}
-              placeholder="YYYY" placeholderTextColor="#aaa"
-              keyboardType="numeric" maxLength={4} />
-          </View>
-
-          <TouchableOpacity style={s.loginBtn} onPress={handleLogin} disabled={loading}>
-            {loading
-              ? <ActivityIndicator color="#fff" />
-              : <><Text style={s.loginBtnText}>Login to Portal</Text><Text style={s.loginBtnArrow}> →</Text></>
-            }
-          </TouchableOpacity>
-
-          <View style={s.infoBox}>
-            <Text style={s.infoText}>ℹ️  Enter your date of birth as DD / MM / YYYY</Text>
-          </View>
-        </View>
-
-        <Text style={s.loginFooter}>
-          © {new Date().getFullYear()} AMET NCC Student Management
-        </Text>
-      </ScrollView>
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
 
-// ── TOP NAV BAR ───────────────────────────────────────────
-function TopNavBar({ regNo, onLogout }) {
+// ── TOP NAV BAR (with Refresh and Exit buttons) ───────────
+function TopNavBar({ regNo, onLogout, onRefresh, refreshing }) {
   return (
     <View style={s.topNav}>
       <Image source={{ uri: AMET_LOGO }} style={s.navLogo} resizeMode="contain" />
@@ -175,6 +175,9 @@ function TopNavBar({ regNo, onLogout }) {
       <View style={s.navUserChip}>
         <Text style={s.navUserText} numberOfLines={1}>{regNo}</Text>
       </View>
+      <TouchableOpacity onPress={onRefresh} style={s.refreshBtn} disabled={refreshing}>
+        <Text style={s.refreshBtnText}>{refreshing ? '⟳' : '↻'}</Text>
+      </TouchableOpacity>
       <TouchableOpacity onPress={onLogout} style={s.logoutBtn}>
         <Text style={s.logoutBtnText}>Exit</Text>
       </TouchableOpacity>
@@ -182,48 +185,8 @@ function TopNavBar({ regNo, onLogout }) {
   );
 }
 
-// ── TAB BAR ───────────────────────────────────────────────
-function TabBar({ active, onTab, unread, pendingComp }) {
-  const tabs = [
-    { id: 'dashboard',     icon: '🏠', label: 'Home' },
-    { id: 'profile',       icon: '👤', label: 'Profile' },
-    { id: 'attendance',    icon: '📅', label: 'Attend' },
-    { id: 'notifications', icon: '🔔', label: 'Alerts',  badge: unread },
-    { id: 'complaints',    icon: '💬', label: 'Help',    badge: pendingComp },
-    { id: 'fund',          icon: '💰', label: 'Fund' },
-  ];
-  return (
-    <View style={s.tabBar}>
-      {tabs.map(t => (
-        <TouchableOpacity key={t.id} style={s.tabItem} onPress={() => onTab(t.id)}>
-          <View style={{ position: 'relative' }}>
-            <Text style={s.tabIcon}>{t.icon}</Text>
-            {t.badge > 0 && (
-              <View style={s.tabBadge}>
-                <Text style={s.tabBadgeText}>{t.badge > 9 ? '9+' : t.badge}</Text>
-              </View>
-            )}
-          </View>
-          <Text style={[s.tabLabel, active === t.id && s.tabLabelActive]}>{t.label}</Text>
-          {active === t.id && <View style={s.tabActiveBar} />}
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-}
-
-// ── SECTION HEADER ────────────────────────────────────────
-function SectionHeader({ title, color, rightElement }) {
-  return (
-    <View style={[s.sectionHeader, { backgroundColor: color || '#1a73e8' }]}>
-      <Text style={s.sectionHeaderTitle}>{title}</Text>
-      {rightElement}
-    </View>
-  );
-}
-
 // ── DASHBOARD ─────────────────────────────────────────────
-function Dashboard({ student, data, onTab }) {
+function Dashboard({ student, data, onNavigate }) {
   const att    = data?.attendance_stats || {};
   const pct    = att.percentage ? att.percentage.toFixed(1) : '0.0';
   const unread = (data?.notifications || []).filter(n => !n.is_read).length;
@@ -241,22 +204,22 @@ function Dashboard({ student, data, onTab }) {
       </View>
 
       <View style={s.statsGrid}>
-        <TouchableOpacity style={[s.statCard, { backgroundColor: '#1a73e8' }]} onPress={() => onTab('attendance')}>
+        <TouchableOpacity style={[s.statCard, { backgroundColor: '#1a73e8' }]} onPress={() => onNavigate('attendance')}>
           <Text style={s.statBgIcon}>📅</Text>
           <Text style={s.statVal}>{pct}%</Text>
           <Text style={s.statLbl}>Attendance</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[s.statCard, { backgroundColor: '#34a853' }]} onPress={() => onTab('fund')}>
+        <TouchableOpacity style={[s.statCard, { backgroundColor: '#34a853' }]} onPress={() => onNavigate('fund')}>
           <Text style={s.statBgIcon}>💰</Text>
           <Text style={s.statVal}>₹{fund.toFixed(0)}</Text>
           <Text style={s.statLbl}>Fund</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[s.statCard, { backgroundColor: '#fbbc04' }]} onPress={() => onTab('notifications')}>
+        <TouchableOpacity style={[s.statCard, { backgroundColor: '#fbbc04' }]} onPress={() => onNavigate('notifications')}>
           <Text style={s.statBgIcon}>🔔</Text>
           <Text style={s.statVal}>{unread}</Text>
           <Text style={s.statLbl}>Unread</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[s.statCard, { backgroundColor: '#ea4335' }]} onPress={() => onTab('complaints')}>
+        <TouchableOpacity style={[s.statCard, { backgroundColor: '#ea4335' }]} onPress={() => onNavigate('complaints')}>
           <Text style={s.statBgIcon}>💬</Text>
           <Text style={s.statVal}>{(data?.complaints || []).filter(c => c.status === 'pending').length}</Text>
           <Text style={s.statLbl}>Pending</Text>
@@ -283,14 +246,14 @@ function Dashboard({ student, data, onTab }) {
         <Text style={s.cardTitle}>⚡ Quick Access</Text>
         <View style={s.quickGrid}>
           {[
-            { icon: '📅', label: 'Attendance', tab: 'attendance',    color: '#e8f0fe', tc: '#1a73e8' },
-            { icon: '👤', label: 'Profile',    tab: 'profile',       color: '#e6f4ea', tc: '#2e7d32' },
-            { icon: '🔔', label: 'Alerts',     tab: 'notifications', color: '#fff8e1', tc: '#f57c00' },
-            { icon: '💬', label: 'Complaints', tab: 'complaints',    color: '#fce8e6', tc: '#c62828' },
-            { icon: '💰', label: 'Fund',       tab: 'fund',          color: '#e6f4ea', tc: '#2e7d32' },
-            { icon: '🏅', label: 'Certs',      tab: 'profile',       color: '#f3e5f5', tc: '#6a1b9a' },
+            { icon: '📅', label: 'Attendance', screen: 'attendance', color: '#e8f0fe', tc: '#1a73e8' },
+            { icon: '👤', label: 'Profile',    screen: 'profile',    color: '#e6f4ea', tc: '#2e7d32' },
+            { icon: '🔔', label: 'Alerts',     screen: 'notifications', color: '#fff8e1', tc: '#f57c00' },
+            { icon: '💬', label: 'Complaints', screen: 'complaints', color: '#fce8e6', tc: '#c62828' },
+            { icon: '💰', label: 'Fund',       screen: 'fund',       color: '#e6f4ea', tc: '#2e7d32' },
+            { icon: '🏅', label: 'Certs',      screen: 'profile',    color: '#f3e5f5', tc: '#6a1b9a' },
           ].map((item, i) => (
-            <TouchableOpacity key={i} style={[s.quickBtn, { backgroundColor: item.color }]} onPress={() => onTab(item.tab)}>
+            <TouchableOpacity key={i} style={[s.quickBtn, { backgroundColor: item.color }]} onPress={() => onNavigate(item.screen)}>
               <Text style={{ fontSize: 24 }}>{item.icon}</Text>
               <Text style={[s.quickBtnText, { color: item.tc }]}>{item.label}</Text>
             </TouchableOpacity>
@@ -312,7 +275,7 @@ function Dashboard({ student, data, onTab }) {
             <Text style={s.infoVal}>{v || '—'}</Text>
           </View>
         ))}
-        <TouchableOpacity style={s.viewMoreBtn} onPress={() => onTab('profile')}>
+        <TouchableOpacity style={s.viewMoreBtn} onPress={() => onNavigate('profile')}>
           <Text style={s.viewMoreText}>View Full Profile →</Text>
         </TouchableOpacity>
       </View>
@@ -484,7 +447,9 @@ function Attendance({ data }) {
 
   return (
     <ScrollView style={s.screen}>
-      <SectionHeader title="📅 My Attendance" />
+      <View style={s.sectionHeaderSimple}>
+        <Text style={s.sectionHeaderTitleSimple}>📅 My Attendance</Text>
+      </View>
       <View style={s.statsGrid}>
         {[
           { label: 'Total',   val: att.total_days   || 0, color: '#1a73e8' },
@@ -546,16 +511,14 @@ function Notifications({ studentId, notifications, onMarkRead }) {
   const unread = notifications.filter(n => !n.is_read).length;
   return (
     <ScrollView style={s.screen}>
-      <SectionHeader
-        title="🔔 Notifications"
-        rightElement={
-          unread > 0
-            ? <TouchableOpacity onPress={() => onMarkRead('all')} style={s.markAllBtn}>
-                <Text style={s.markAllText}>✓ Mark all read</Text>
-              </TouchableOpacity>
-            : null
-        }
-      />
+      <View style={[s.sectionHeaderSimple, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+        <Text style={s.sectionHeaderTitleSimple}>🔔 Notifications</Text>
+        {unread > 0 && (
+          <TouchableOpacity onPress={() => onMarkRead('all')} style={s.markAllBtnSimple}>
+            <Text style={s.markAllTextSimple}>✓ Mark all read</Text>
+          </TouchableOpacity>
+        )}
+      </View>
       {notifications.length === 0
         ? <View style={s.empty}><Text style={{ fontSize: 40 }}>🔕</Text><Text style={s.emptyText}>No notifications yet</Text></View>
         : notifications.map(n => (
@@ -616,15 +579,12 @@ function Complaints({ studentId, complaints, onRefresh }) {
 
   return (
     <ScrollView style={s.screen}>
-      <SectionHeader
-        title="💬 Complaints"
-        color="#ea4335"
-        rightElement={
-          <TouchableOpacity onPress={() => setShowForm(!showForm)} style={s.newBtn}>
-            <Text style={s.newBtnText}>{showForm ? '✕ Cancel' : '+ New'}</Text>
-          </TouchableOpacity>
-        }
-      />
+      <View style={[s.sectionHeaderSimple, { backgroundColor: '#ea4335', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+        <Text style={[s.sectionHeaderTitleSimple, { color: '#fff' }]}>💬 Complaints</Text>
+        <TouchableOpacity onPress={() => setShowForm(!showForm)} style={s.newBtnSimple}>
+          <Text style={s.newBtnTextSimple}>{showForm ? '✕ Cancel' : '+ New'}</Text>
+        </TouchableOpacity>
+      </View>
 
       {showForm && (
         <View style={s.card}>
@@ -691,7 +651,9 @@ function Fund({ data }) {
 
   return (
     <ScrollView style={s.screen}>
-      <SectionHeader title="💰 Fund Details" color="#34a853" />
+      <View style={[s.sectionHeaderSimple, { backgroundColor: '#34a853' }]}>
+        <Text style={[s.sectionHeaderTitleSimple, { color: '#fff' }]}>💰 Fund Details</Text>
+      </View>
       <View style={s.statsGrid}>
         {[
           { label: 'Total Received', val: `₹${total.toFixed(0)}`, color: '#34a853' },
@@ -729,14 +691,31 @@ function Fund({ data }) {
 export default function App() {
   const [student,     setStudent]     = useState(null);
   const [dashData,    setDashData]    = useState(null);
-  const [tab,         setTab]         = useState('dashboard');
+  const [currentScreen, setCurrentScreen] = useState('dashboard');
   const [loading,     setLoading]     = useState(false);
+  const [refreshing,  setRefreshing]  = useState(false);
   const [updateReady, setUpdateReady] = useState(false);
 
   // Check for OTA update when app opens
   useEffect(() => {
     checkForUpdates(setUpdateReady);
   }, []);
+
+  // Android back button handler
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (currentScreen !== 'dashboard') {
+        setCurrentScreen('dashboard');
+        return true;
+      }
+      Alert.alert('Exit', 'Do you want to exit the app?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Exit', style: 'destructive', onPress: () => BackHandler.exitApp() },
+      ]);
+      return true;
+    });
+    return () => backHandler.remove();
+  }, [currentScreen]);
 
   const handleLogin = async (studentData) => {
     setStudent(studentData);
@@ -751,11 +730,13 @@ export default function App() {
 
   const refreshData = async () => {
     if (!student) return;
+    setRefreshing(true);
     try {
       const res  = await fetch(`${BASE_URL}/api/student/dashboard/${student.student_id}`);
       const data = await res.json();
       if (data.success) setDashData(data.data);
-    } catch (e) {}
+    } catch (e) { Alert.alert('Error', 'Could not refresh data'); }
+    setRefreshing(false);
   };
 
   const markRead = async (id) => {
@@ -780,7 +761,7 @@ export default function App() {
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', style: 'destructive', onPress: () => { setStudent(null); setDashData(null); setTab('dashboard'); } },
+      { text: 'Logout', style: 'destructive', onPress: () => { setStudent(null); setDashData(null); setCurrentScreen('dashboard'); } },
     ]);
   };
 
@@ -801,19 +782,40 @@ export default function App() {
     <View style={{ flex: 1, backgroundColor: '#f5f7fa' }}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 
-      {/* Update notification banner — tap to apply update */}
+      {/* Update notification banner */}
       <UpdateBanner visible={updateReady} />
 
-      <TopNavBar regNo={student.regimental_number} onLogout={handleLogout} />
+      <TopNavBar
+        regNo={student.regimental_number}
+        onLogout={handleLogout}
+        onRefresh={refreshData}
+        refreshing={refreshing}
+      />
 
-      {tab === 'dashboard'     && <Dashboard    student={student} data={dashData} onTab={setTab} />}
-      {tab === 'profile'       && <Profile      data={dashData} />}
-      {tab === 'attendance'    && <Attendance   data={dashData} />}
-      {tab === 'notifications' && <Notifications studentId={student.student_id} notifications={dashData?.notifications || []} onMarkRead={markRead} />}
-      {tab === 'complaints'    && <Complaints   studentId={student.student_id} complaints={dashData?.complaints || []} onRefresh={refreshData} />}
-      {tab === 'fund'          && <Fund         data={dashData} />}
-
-      <TabBar active={tab} onTab={setTab} unread={unread} pendingComp={pendingComp} />
+      {currentScreen === 'dashboard' && (
+        <Dashboard
+          student={student}
+          data={dashData}
+          onNavigate={setCurrentScreen}
+        />
+      )}
+      {currentScreen === 'profile' && <Profile data={dashData} />}
+      {currentScreen === 'attendance' && <Attendance data={dashData} />}
+      {currentScreen === 'notifications' && (
+        <Notifications
+          studentId={student.student_id}
+          notifications={dashData?.notifications || []}
+          onMarkRead={markRead}
+        />
+      )}
+      {currentScreen === 'complaints' && (
+        <Complaints
+          studentId={student.student_id}
+          complaints={dashData?.complaints || []}
+          onRefresh={refreshData}
+        />
+      )}
+      {currentScreen === 'fund' && <Fund data={dashData} />}
     </View>
   );
 }
@@ -821,15 +823,12 @@ export default function App() {
 // ── STYLES ────────────────────────────────────────────────
 const s = StyleSheet.create({
   safeArea:            { flex: 1, backgroundColor: '#fff' },
-  loginBg:             { flexGrow: 1, backgroundColor: '#f5f7fa', paddingBottom: 30 },
-  loginLogoBar:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', paddingVertical: 16, paddingHorizontal: 24, gap: 12, borderBottomWidth: 0.5, borderBottomColor: '#e1e5eb' },
-  loginLogoImg:        { width: 110, height: 44 },
-  loginLogoDivider:    { width: 1, height: 40, backgroundColor: '#e1e5eb' },
-  loginTitleWrap:      { alignItems: 'center', paddingVertical: 20 },
+  loginContainer:      { flex: 1, backgroundColor: '#f5f7fa' },
+  loginScroll:         { flexGrow: 1, justifyContent: 'center', paddingBottom: 30 },
+  loginTitleWrap:      { alignItems: 'center', marginBottom: 20 },
   loginLogosAbove:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 16 },
   loginLogoBig:        { width: 120, height: 50 },
   loginLogoDividerBig: { width: 1, height: 46, backgroundColor: '#e1e5eb' },
-  loginShield:         { width: 72, height: 72, borderRadius: 36, backgroundColor: '#1a73e8', alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
   loginTitle:          { fontSize: 22, fontWeight: '700', color: '#1a1a1a' },
   loginSub:            { fontSize: 13, color: '#666', marginTop: 4 },
   loginCard:           { backgroundColor: '#fff', borderRadius: 16, padding: 22, marginHorizontal: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
@@ -840,8 +839,6 @@ const s = StyleSheet.create({
   inputField:          { flex: 1, fontSize: 14, color: '#333', paddingVertical: 10 },
   dobRow:              { flexDirection: 'row', gap: 8, marginBottom: 10 },
   dobInput:            { flex: 1, borderWidth: 2, borderColor: '#e1e5eb', borderRadius: 8, padding: 10, fontSize: 14, color: '#333', backgroundColor: '#fafafa' },
-  dobPreview:          { backgroundColor: '#e8f0fe', borderRadius: 8, padding: 10, marginBottom: 16, alignItems: 'center' },
-  dobPreviewText:      { color: '#1a73e8', fontWeight: '600', fontSize: 14 },
   loginBtn:            { backgroundColor: '#1a73e8', borderRadius: 10, padding: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   loginBtnText:        { color: '#fff', fontSize: 16, fontWeight: '700' },
   loginBtnArrow:       { color: '#fff', fontSize: 18, fontWeight: '700' },
@@ -858,18 +855,12 @@ const s = StyleSheet.create({
   navLogoDivider:      { width: 1, height: 24, backgroundColor: '#e1e5eb' },
   navUserChip:         { backgroundColor: '#e8f0fe', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, maxWidth: 120 },
   navUserText:         { color: '#1a73e8', fontSize: 11, fontWeight: '600' },
+  refreshBtn:          { backgroundColor: '#e8f0fe', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
+  refreshBtnText:      { color: '#1a73e8', fontSize: 18, fontWeight: '600' },
   logoutBtn:           { backgroundColor: '#fce8e6', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
   logoutBtnText:       { color: '#ea4335', fontSize: 12, fontWeight: '700' },
-  tabBar:              { flexDirection: 'row', backgroundColor: '#fff', borderTopWidth: 0.5, borderTopColor: '#e1e5eb', paddingBottom: 4 },
-  tabItem:             { flex: 1, alignItems: 'center', paddingTop: 6, position: 'relative' },
-  tabIcon:             { fontSize: 20 },
-  tabLabel:            { fontSize: 10, color: '#999', marginTop: 2 },
-  tabLabelActive:      { color: '#1a73e8', fontWeight: '600' },
-  tabActiveBar:        { position: 'absolute', top: 0, left: '20%', right: '20%', height: 2, backgroundColor: '#1a73e8', borderRadius: 1 },
-  tabBadge:            { position: 'absolute', top: -4, right: -8, backgroundColor: '#ea4335', borderRadius: 9, minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 2 },
-  tabBadgeText:        { color: '#fff', fontSize: 9, fontWeight: '700' },
-  sectionHeader:       { padding: 16, paddingTop: 14, paddingBottom: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sectionHeaderTitle:  { color: '#fff', fontSize: 18, fontWeight: '700' },
+  sectionHeaderSimple: { padding: 16, paddingTop: 14, paddingBottom: 14, backgroundColor: '#1a73e8' },
+  sectionHeaderTitleSimple: { color: '#fff', fontSize: 18, fontWeight: '700' },
   screen:              { flex: 1, backgroundColor: '#f5f7fa' },
   welcomeBanner:       { backgroundColor: '#1a73e8', padding: 20, flexDirection: 'row', alignItems: 'center' },
   welcomeGreeting:     { color: 'rgba(255,255,255,0.8)', fontSize: 13 },
@@ -920,10 +911,10 @@ const s = StyleSheet.create({
   notifMsg:            { fontSize: 12, color: '#666', marginTop: 2, lineHeight: 16 },
   notifTime:           { fontSize: 10, color: '#999', marginTop: 3 },
   dot:                 { width: 8, height: 8, borderRadius: 4, backgroundColor: '#ea4335' },
-  markAllBtn:          { backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5 },
-  markAllText:         { color: '#1a73e8', fontSize: 12, fontWeight: '600' },
-  newBtn:              { backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6 },
-  newBtnText:          { color: '#ea4335', fontSize: 13, fontWeight: '700' },
+  markAllBtnSimple:    { backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5 },
+  markAllTextSimple:   { color: '#1a73e8', fontSize: 12, fontWeight: '600' },
+  newBtnSimple:        { backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6 },
+  newBtnTextSimple:    { color: '#ea4335', fontSize: 13, fontWeight: '700' },
   typeChip:            { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: '#e1e5eb', marginRight: 8, backgroundColor: '#fff' },
   typeChipSel:         { backgroundColor: '#1a73e8', borderColor: '#1a73e8' },
   typeChipText:        { fontSize: 12, fontWeight: '600', color: '#666' },
