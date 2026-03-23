@@ -2,13 +2,31 @@ import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   TextInput, StyleSheet, Alert, ActivityIndicator,
-  SafeAreaView, StatusBar, Image, BackHandler
+  SafeAreaView, StatusBar, Image, BackHandler, Linking
 } from 'react-native';
 import * as Updates from 'expo-updates';
 
 const BASE_URL = 'https://ametncc.pythonanywhere.com';
 const AMET_LOGO = 'https://ametncc.pythonanywhere.com/uploads/photos/amet-logo-9.png';
 const NCC_LOGO  = 'https://ametncc.pythonanywhere.com/uploads/photos/ncclogo.png';
+
+// ── NEW APP CONFIG ─────────────────────────────────────────
+// Replace these values with your new app's details
+const NEW_APP_CONFIG = {
+  // Set to true when the new app is ready and published
+  enabled: true,
+  // The title shown in the migration banner
+  name: 'AMET NCC Portal v2',
+  // Short description of what's new
+  description: 'New features, faster & better experience!',
+  // Android Play Store or direct APK download link for the new app
+  androidUrl: 'https://play.google.com/store/apps/details?id=com.ziaulfaisal.ametncc2',
+  // iOS App Store link (optional)
+  iosUrl: 'https://apps.apple.com/app/amet-ncc-portal-v2/id0000000000',
+  // API endpoint that returns { migrationRequired: true/false, message: "..." }
+  // Set to null to always show the banner (no server check)
+  checkUrl: `${BASE_URL}/api/app/migration-status`,
+};
 
 // ── HELPER: build full image URL ──────────────────────────
 function getImageUrl(path, subfolder = 'photos') {
@@ -33,6 +51,26 @@ async function checkForUpdates(setUpdateReady) {
   }
 }
 
+// ── NEW APP MIGRATION CHECK ────────────────────────────────
+async function checkMigration(setMigrationBanner) {
+  try {
+    if (!NEW_APP_CONFIG.enabled) return;
+    if (NEW_APP_CONFIG.checkUrl) {
+      const res  = await fetch(NEW_APP_CONFIG.checkUrl);
+      const data = await res.json();
+      if (data.migrationRequired) {
+        setMigrationBanner({ show: true, message: data.message || NEW_APP_CONFIG.description });
+      }
+    } else {
+      setMigrationBanner({ show: true, message: NEW_APP_CONFIG.description });
+    }
+  } catch (e) {
+    if (NEW_APP_CONFIG.enabled) {
+      setMigrationBanner({ show: true, message: NEW_APP_CONFIG.description });
+    }
+  }
+}
+
 // ── UPDATE BANNER ─────────────────────────────────────────
 function UpdateBanner({ visible }) {
   if (!visible) return null;
@@ -53,6 +91,37 @@ function UpdateBanner({ visible }) {
       </View>
       <Text style={s.updateBannerBtn}>Update →</Text>
     </TouchableOpacity>
+  );
+}
+
+// ── NEW APP MIGRATION BANNER ───────────────────────────────
+function MigrationBanner({ banner, onDismiss }) {
+  if (!banner?.show) return null;
+  const openNewApp = async () => {
+    const url = NEW_APP_CONFIG.androidUrl || NEW_APP_CONFIG.iosUrl;
+    if (!url) { Alert.alert('Info', 'New app link not configured.'); return; }
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) { await Linking.openURL(url); }
+      else { Alert.alert('Cannot open', 'Could not open the store link on this device.'); }
+    } catch (e) { Alert.alert('Error', 'Failed to open the new app link.'); }
+  };
+  return (
+    <View style={s.migrationBanner}>
+      <View style={s.migrationBannerTop}>
+        <Text style={s.migrationIcon}>🚀</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={s.migrationTitle}>{NEW_APP_CONFIG.name} is Here!</Text>
+          <Text style={s.migrationSub}>{banner.message}</Text>
+        </View>
+        <TouchableOpacity onPress={onDismiss} style={s.migrationCloseBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <Text style={s.migrationCloseText}>✕</Text>
+        </TouchableOpacity>
+      </View>
+      <TouchableOpacity style={s.migrationActionBtn} onPress={openNewApp} activeOpacity={0.85}>
+        <Text style={s.migrationActionText}>⬇ Download New App Now</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -735,11 +804,13 @@ export default function App() {
   const [tab,         setTab]         = useState('dashboard');
   const [loading,     setLoading]     = useState(false);
   const [refreshing,  setRefreshing]  = useState(false);
-  const [updateReady, setUpdateReady] = useState(false);
+  const [updateReady,    setUpdateReady]    = useState(false);
+  const [migrationBanner, setMigrationBanner] = useState({ show: false, message: '' });
 
-  // Check for OTA update when app opens
+  // Check for OTA update & new app migration when app opens
   useEffect(() => {
     checkForUpdates(setUpdateReady);
+    checkMigration(setMigrationBanner);
   }, []);
 
   // Android back button handler
@@ -826,6 +897,12 @@ export default function App() {
       {/* Update notification banner */}
       <UpdateBanner visible={updateReady} />
 
+      {/* New app migration banner */}
+      <MigrationBanner
+        banner={migrationBanner}
+        onDismiss={() => setMigrationBanner({ show: false, message: '' })}
+      />
+
       <TopNavBar
         regNo={student.regimental_number}
         onLogout={handleLogout}
@@ -875,6 +952,16 @@ const s = StyleSheet.create({
   updateBannerTitle:   { color: '#fff', fontWeight: '700', fontSize: 13 },
   updateBannerSub:     { color: 'rgba(255,255,255,0.8)', fontSize: 11 },
   updateBannerBtn:     { color: '#fff', fontWeight: '700', fontSize: 14, backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
+  // Migration banner styles
+  migrationBanner:     { backgroundColor: '#0f4c81', paddingHorizontal: 14, paddingTop: 12, paddingBottom: 10 },
+  migrationBannerTop:  { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
+  migrationIcon:       { fontSize: 26 },
+  migrationTitle:      { color: '#fff', fontWeight: '800', fontSize: 14 },
+  migrationSub:        { color: 'rgba(255,255,255,0.8)', fontSize: 11, marginTop: 2 },
+  migrationCloseBtn:   { padding: 4 },
+  migrationCloseText:  { color: 'rgba(255,255,255,0.7)', fontSize: 16, fontWeight: '700' },
+  migrationActionBtn:  { backgroundColor: '#fabc05', borderRadius: 8, paddingVertical: 9, alignItems: 'center' },
+  migrationActionText: { color: '#0f4c81', fontWeight: '800', fontSize: 13 },
   topNav:              { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 8, paddingTop: 36, borderBottomWidth: 0.5, borderBottomColor: '#e1e5eb', gap: 8 },
   navLogo:             { width: 70, height: 28 },
   navLogoDivider:      { width: 1, height: 24, backgroundColor: '#e1e5eb' },
