@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import * as Updates from 'expo-updates';
 
-const BASE_URL = 'https://ametncc.pythonanywhere.co';
+const BASE_URL = 'https://ametncc.pythonanywhere.com';
 const AMET_LOGO = 'https://ametncc.pythonanywhere.com/uploads/photos/amet-logo-9.png';
 const NCC_LOGO  = 'https://ametncc.pythonanywhere.com/uploads/photos/ncclogo.png';
 
