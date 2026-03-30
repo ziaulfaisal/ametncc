@@ -156,7 +156,7 @@ function LoginScreen({ onLogin }) {
           </View>
 
           <Text style={s.loginFooter}>
-            © {new Date().getFullYear()} AMET NCC Student Management
+            © {new Date().getFullYear()} AMET NC C Student Management
           </Text>
         </ScrollView>
       </View>
