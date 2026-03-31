@@ -8,7 +8,7 @@ import * as Updates from 'expo-updates';
 
 const BASE_URL = 'https://ametncc.pythonanywhere.com';
 const AMET_LOGO = 'https://ametncc.pythonanywhere.com/uploads/photos/amet-logo-9.png';
-const NCC_LOGO  = 'https://ametncc.pythonanywhere.com/uploads/photos/ncclogo.png';
+const NCC_LOGO  = 'https://ametncc.pythonanywhere.com/uploads/photos/ncclog.png';
 
 // ── HELPER: build full image URL ──────────────────────────
 function getImageUrl(path, subfolder = 'photos') {
