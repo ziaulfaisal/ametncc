@@ -1,31 +1,41 @@
 {
   "expo": {
-    "name": "AMET NCC",
-    "slug": "ametncc",
+    "name": "AMET APP",
+    "slug": "ametapp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "https://ametncc.pythonanywhere.com/uploads/photos/ametnccapplogo.png",
     "userInterfaceStyle": "light",
+    "newArchEnabled": true,
     "splash": {
-      "image": "https://ametncc.pythonanywhere.com/uploads/photos/ametnccapplogo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#1a73e8"
+      "backgroundColor": "#1A3560"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.amet.csmart",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "https://ametncc.pythonanywhere.com/uploads/photos/ametnccapplogo.png",
-        "backgroundColor": "#1a73e8"
+        "backgroundColor": "#1A3560"
       },
-      "package": "com.ziaulfaisal.ametncc"
+      "package": "com.amet.csmart",
+      "versionCode": 1,
+      "permissions": ["INTERNET", "ACCESS_NETWORK_STATE"]
     },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": ["expo-font"],
     "extra": {
       "eas": {
-        "projectId": "a9a621d4-91e8-438f-a7c1-7f5f6156ab37"
+        "projectId": "646eaf26-d83d-45ff-8485-c3937d17c4c6"
       }
     },
     "runtimeVersion": "1.0.0",
     "updates": {
-      "url": "https://u.expo.dev/a9a621d4-91e8-438f-a7c1-7f5f6156ab37",
+      "url": "https://u.expo.dev/646eaf26-d83d-45ff-8485-c3937d17c4c6",
       "enabled": true,
       "checkAutomatically": "ON_LOAD"
     }
